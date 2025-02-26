@@ -1,9 +1,9 @@
 import hashlib
 import logging
+import mimetypes
 import os
 from functools import lru_cache
 from pathlib import Path
-import mimetypes
 
 from aiohttp import hdrs, web
 from aiomisc import threaded
