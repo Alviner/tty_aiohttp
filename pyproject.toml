@@ -32,7 +32,7 @@ pytest-cov = "^5.0.0"
 coveralls = "^3.3.1"
 mypy = "~1.15.0"
 gray = "^0.15.0"
-ruff = "0.0.263"
+ruff = "0.9.7"
 
 [tool.poetry.scripts]
 tty_aiohttp = "tty_aiohttp.app.__main__:main"
