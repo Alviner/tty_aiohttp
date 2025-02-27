@@ -11,7 +11,6 @@ from tty_aiohttp.app import STATIC_ROOT
 from tty_aiohttp.app.handlers.index import IndexHandler
 from tty_aiohttp.app.handlers.static import StaticResource
 from tty_aiohttp.app.handlers.v1.ping import PingHandler
-from tty_aiohttp.app.handlers.ws.env import EnvHandler
 from tty_aiohttp.app.handlers.ws.pty import PtyHandler
 from tty_aiohttp.app.middlewares import vue_router_middleware
 from tty_aiohttp.app.utils.serializers import config_serializers
@@ -36,7 +35,7 @@ class REST(AIOHTTPService):
         ("GET", "/api/v1/ping", PingHandler),
     )
 
-    WS_ROUTES: WsHandlersType = (("env", EnvHandler), ("pty", PtyHandler))
+    WS_ROUTES: WsHandlersType = (("pty", PtyHandler),)
 
     async def create_application(self) -> Application:
         config_serializers()
