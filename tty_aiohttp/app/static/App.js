@@ -30,6 +30,11 @@ export default {
     });
     await this.$wsrpc.proxy.pty.ready();
     await this.fitToscreen();
+
+    window.addEventListener("resize", this.fitToscreen);
+  },
+  beforeUnmount() {
+    window.removeEventListener("resize", this.fitToscreen);
   },
   methods: {
     async fitToscreen() {
@@ -39,5 +44,5 @@ export default {
       await this.$wsrpc.proxy.pty.resize(dims);
     },
   },
-  template: "<div style='width: 100%; height: 100%' ref='terminal'></div>",
+  template: "<div style='width: 100vw; height: 100vh' ref='terminal'></div>",
 };
