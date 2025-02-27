@@ -18,6 +18,8 @@ from tty_aiohttp.utils.argparse import Environment
 
 log = logging.getLogger(__name__)
 
+DEFAULT_SHELL = "/usr/bin/zsh"
+
 ApiHandlersType = tuple[tuple[str, str, Any], ...]
 WsHandlersType = tuple[tuple[str, Any], ...]
 
@@ -26,6 +28,7 @@ class REST(AIOHTTPService):
     __required__ = ("env",)
 
     env: Environment
+    shell: str = DEFAULT_SHELL
 
     _middlewares = (vue_router_middleware,)
     __dependencies__: tuple[str, ...] = tuple()
@@ -65,6 +68,7 @@ class REST(AIOHTTPService):
     def _set_dependencies(self, app: Application) -> None:
         for name in chain(self.__required__, self.__dependencies__):
             app[name] = getattr(self, name)
+        app["shell"] = self.shell
 
     def _add_middlewares(self, app: web.Application) -> None:
         for middleware in self._middlewares:

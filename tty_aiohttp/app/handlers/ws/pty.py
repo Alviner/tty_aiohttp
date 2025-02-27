@@ -83,12 +83,16 @@ class PtyHandler(Route):
         self._terminal: Terminal | None = None
 
     @property
+    def shell(self) -> str:
+        return self.socket.request.app["shell"]  # type: ignore
+
+    @property
     async def terminal(self) -> Terminal:
         if self._terminal is not None:
             return self._terminal
         master_fd, slave_fd = await pty_open()
         process = await asyncio.create_subprocess_exec(
-            "/usr/bin/zsh",
+            self.shell,
             preexec_fn=os.setsid,
             stdin=slave_fd,
             stdout=slave_fd,

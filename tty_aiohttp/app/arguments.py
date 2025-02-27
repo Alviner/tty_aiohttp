@@ -54,3 +54,4 @@ group.add_argument(
 group = parser.add_argument_group("API Options")
 group.add_argument("--api-address", default="127.0.0.1")
 group.add_argument("--api-port", type=positive_int, default=9090)
+group.add_argument("--shell", type=str, default="/usr/bin/zsh")

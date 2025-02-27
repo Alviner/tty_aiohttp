@@ -31,6 +31,7 @@ def _run_worker(
             sock=rest_sock,
             debug=args.debug,
             env=args.sentry_env,
+            shell=args.shell,
         ),
     ]
     if args.sentry_dsn:
