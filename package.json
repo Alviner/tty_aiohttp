@@ -1,5 +1,5 @@
 {
-  "license": "unlicence",
+  "license": "mit",
   "private": true,
   "scripts": {
     "build": "node buildVendor.js",
@@ -35,6 +35,5 @@
     "not ios_saf 12.2",
     "not ios_saf 13.4"
   ],
-  "node": "^12.22.0 || ^14.17.0 || >=16.0.0",
-  "packageManager": "yarn@4.6.0"
+  "node": "^12.22.0 || ^14.17.0 || >=16.0.0"
 }
