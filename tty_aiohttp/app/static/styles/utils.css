@@ -1,7 +1,0 @@
-/* display */
-.block { display: block }
-.flex { display: flex }
-
-/* sizing */
-.min-h-screen { min-height: 100vh }
-

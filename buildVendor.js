@@ -7,7 +7,7 @@ const nodePaths = [modulePath];
 process.env.NODE_ENV = "production";
 
 const target = ["es2020", "chrome58", "firefox57", "safari11"];
-const outdir = "./tty_aiohttp/tty/static/vendor";
+const outdir = "./tty_aiohttp/app/static/vendor";
 
 esbuild.build({
   entryPoints: ["./vendor/vendor.js"],

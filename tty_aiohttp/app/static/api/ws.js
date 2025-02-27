@@ -15,7 +15,7 @@ wsrpc.addEventListener("onerror", function () {
 	console.error("Connection lost");
 	loading = Loading.service({
 		lock: true,
-		text: 'Потеряно соединение',
+		text: 'Connection is lost',
 		spinner: 'el-icon-loading',
 		background: 'rgba(0, 0, 0, 0.7)'
 	});

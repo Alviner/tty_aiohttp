@@ -8,7 +8,7 @@ async def test_vue_router_middleware(path: str, api_client):
     async with api_client.get(path) as resp:
         assert resp.status == HTTPStatus.OK
         body = await resp.text()
-        assert '<div id="app">' in body
+        assert '<div id="app"' in body
 
 
 async def test_static_file(api_client):

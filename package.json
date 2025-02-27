@@ -1,5 +1,5 @@
 {
-  "license": "unlicence",
+  "license": "mit",
   "private": true,
   "scripts": {
     "build": "node buildVendor.js",
@@ -9,13 +9,19 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.0.10",
     "@wsrpc/client": "4.4.1",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/addon-webgl": "^0.18.0",
+    "@xterm/xterm": "^5.5.0",
     "element-plus": "^2.2.32",
-    "es-module-shims": "^1.7.0",
+    "es-module-shims": "^2.0.10",
     "esbuild": "0.25.0",
+    "uuid": "^11.1.0",
     "vue": "3.5.13",
     "vue-router": "4.5.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.0",
+    "@eslint/js": "^9.21.0",
     "@luncheon/esbuild-plugin-gzip": "^0.1.0",
     "eslint": "^9.21.0",
     "eslint-plugin-vue": "^9.9.0"

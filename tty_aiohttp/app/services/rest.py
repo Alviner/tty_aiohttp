@@ -11,12 +11,14 @@ from tty_aiohttp.app import STATIC_ROOT
 from tty_aiohttp.app.handlers.index import IndexHandler
 from tty_aiohttp.app.handlers.static import StaticResource
 from tty_aiohttp.app.handlers.v1.ping import PingHandler
-from tty_aiohttp.app.handlers.ws.env import EnvHandler
+from tty_aiohttp.app.handlers.ws.pty import PtyHandler
 from tty_aiohttp.app.middlewares import vue_router_middleware
 from tty_aiohttp.app.utils.serializers import config_serializers
 from tty_aiohttp.utils.argparse import Environment
 
 log = logging.getLogger(__name__)
+
+DEFAULT_SHELL = "/usr/bin/zsh"
 
 ApiHandlersType = tuple[tuple[str, str, Any], ...]
 WsHandlersType = tuple[tuple[str, Any], ...]
@@ -26,6 +28,7 @@ class REST(AIOHTTPService):
     __required__ = ("env",)
 
     env: Environment
+    shell: str = DEFAULT_SHELL
 
     _middlewares = (vue_router_middleware,)
     __dependencies__: tuple[str, ...] = tuple()
@@ -35,7 +38,7 @@ class REST(AIOHTTPService):
         ("GET", "/api/v1/ping", PingHandler),
     )
 
-    WS_ROUTES: WsHandlersType = (("env", EnvHandler),)
+    WS_ROUTES: WsHandlersType = (("pty", PtyHandler),)
 
     async def create_application(self) -> Application:
         config_serializers()
@@ -65,6 +68,7 @@ class REST(AIOHTTPService):
     def _set_dependencies(self, app: Application) -> None:
         for name in chain(self.__required__, self.__dependencies__):
             app[name] = getattr(self, name)
+        app["shell"] = self.shell
 
     def _add_middlewares(self, app: web.Application) -> None:
         for middleware in self._middlewares:

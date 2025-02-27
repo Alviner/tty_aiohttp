@@ -13,7 +13,7 @@ RUN /usr/share/python3/app/bin/pip install -U /mnt/dist/*.whl
 RUN find-libdeps /usr/share/python3/app > /usr/share/python3/app/pkgdeps.txt
 
 ########################################################################
-FROM snakepacker/python:3.11 as release
+FROM snakepacker/python:3.12 as release
 
 COPY --from=builder /usr/share/python3/app /usr/share/python3/app
 RUN xargs -ra /usr/share/python3/app/pkgdeps.txt apt-install

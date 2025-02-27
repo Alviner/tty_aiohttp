@@ -1,6 +1,0 @@
-/**/vendor.*
-/**/es-module-shims.*
-env/
-!vendor.js
-buildVendor.js
-
