@@ -39,7 +39,7 @@ group = parser.add_argument_group("Logging options")
 group.add_argument(
     "--log-level",
     choices=LogLevel.choices(),
-    default=LogLevel.info,
+    default=LogLevel.debug,
 )
 group.add_argument(
     "--log-format", choices=LogFormat.choices(), default=LogFormat.color

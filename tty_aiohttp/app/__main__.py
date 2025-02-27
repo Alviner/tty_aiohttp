@@ -38,7 +38,7 @@ def _run_worker(
             RavenSender(
                 sentry_dsn=args.sentry_dsn,
                 client_options=dict(
-                    name="admin",
+                    name="app",
                     environment=args.sentry_env,
                     release=__version__,
                 ),
@@ -56,7 +56,6 @@ def _run_worker(
 
 def main() -> None:
     args = parser.parse_args()
-    os.environ.clear()
     basic_config(
         level=args.log_level,
         log_format=args.log_format,
