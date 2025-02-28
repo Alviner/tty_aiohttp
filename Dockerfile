@@ -15,13 +15,13 @@ RUN find-libdeps /usr/share/python3/app > /usr/share/python3/app/pkgdeps.txt
 ########################################################################
 FROM snakepacker/python:3.13 AS release
 
-COPY --from=builder /usr/share/python3/app /usr/share/python3/app
-RUN xargs -ra /usr/share/python3/app/pkgdeps.txt apt-install
-RUN find /usr/share/python3/app/bin/ -name 'tty_aiohttp*' -exec ln -snf '{}' /usr/bin/ ';'
-
 ADD packages.txt /usr/share/packages.txt
 RUN xargs -ra /usr/share/packages.txt apt-install
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+COPY --from=builder /usr/share/python3/app /usr/share/python3/app
+RUN xargs -ra /usr/share/python3/app/pkgdeps.txt apt-install
+RUN find /usr/share/python3/app/bin/ -name 'tty_aiohttp*' -exec ln -snf '{}' /usr/bin/ ';'
 
 
 CMD ["tty_aiohttp", "--api-address", "0.0.0.0"]

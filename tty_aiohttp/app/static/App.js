@@ -28,7 +28,6 @@ export default {
     this.$wsrpc.addRoute("pty.output", ({ data }) => {
       this.term.write(data);
     });
-    await this.fitToscreen();
     await this.ready();
 
     this.$wsrpc.addEventListener("onconnect", this.ready);
@@ -38,18 +37,18 @@ export default {
   beforeUnmount() {
     window.removeEventListener("resize", this.fitToscreen);
     this.$wsrpc.removeEventListener("onconnect", this.ready);
-
   },
   methods: {
     async fitToscreen() {
       this.fit.fit();
       const dims = { width: this.term.cols, height: this.term.rows };
-      console.log("sending new dimensions", dims);
       await this.$wsrpc.proxy.pty.resize(dims);
     },
     async ready() {
-      await this.$wsrpc.proxy.pty.ready();
-    }
+      this.fit.fit();
+      const dims = { width: this.term.cols, height: this.term.rows };
+      await this.$wsrpc.proxy.pty.ready(dims);
+    },
   },
   template: "<div style='width: 100vw; height: 100vh' ref='terminal'></div>",
 };

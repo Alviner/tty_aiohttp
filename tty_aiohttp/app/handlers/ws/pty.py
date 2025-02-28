@@ -20,6 +20,11 @@ def pty_open() -> tuple[int, int]:
     return pty.openpty()
 
 
+@threaded
+def os_write(fd: int, chunk: bytes):
+    os.write(fd, chunk)
+
+
 @dataclass
 class Terminal:
     process: Process
@@ -30,14 +35,17 @@ class Terminal:
     read_cb: t.Callable[[str], t.Awaitable[None]]
 
     _read_task: asyncio.Task[None] = field(init=False)
+    _write_task: asyncio.Task[None] = field(init=False)
+    _monitor_task: asyncio.Task[None] = field(init=False)
 
     def __post_init__(self) -> None:
-        self._read_task = asyncio.create_task(self.read())
+        self._write_task = asyncio.create_task(self._write())
+        self._read_task = asyncio.create_task(self._read())
+        self._monitor_task = asyncio.create_task(self._monitor())
         loop = asyncio.get_event_loop()
         loop.add_reader(self.fd, self.on_read)
-        loop.add_writer(self.fd, self.on_write)
 
-    async def read(self) -> None:
+    async def _read(self) -> None:
         while True:
             chunk = await self.read_queue.get()
             await self.read_cb(chunk)
@@ -45,10 +53,10 @@ class Terminal:
     async def write(self, chunk: str) -> None:
         await self.write_queue.put(chunk)
 
-    def on_write(self) -> None:
-        while not self.write_queue.empty():
-            user_input: str = self.write_queue.get_nowait()
-            os.write(self.fd, user_input.encode("utf-8"))
+    async def _write(self) -> None:
+        while True:
+            chunk = await self.write_queue.get()
+            await os_write(self.fd, chunk.encode("utf-8"))
 
     def on_read(self) -> None:
         max_read_bytes = 1024 * 20
@@ -66,15 +74,22 @@ class Terminal:
         winsize = struct.pack("HHHH", height, width, xpix, ypix)
         fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
 
-    async def close(self) -> None:
-        self._read_task.cancel()
-        self.process.kill()
-        status_code = await self.process.wait()
-        log.debug("Terminal closed with status code %s", status_code)
+    async def _monitor(self) -> None:
+        return_code = await self.process.wait()
+        log.info("Process was finished with return code %s", return_code)
+        await self._close()
 
+    async def _close(self) -> None:
         loop = asyncio.get_event_loop()
         loop.remove_reader(self.fd)
-        loop.remove_writer(self.fd)
+        self._read_task.cancel()
+        self._write_task.cancel()
+
+    async def close(self) -> None:
+        if (return_code := self.process.returncode) is not None:
+            log.info("Process was already closed with return code %s", return_code)
+            return
+        self.process.kill()
 
 
 class PtyHandler(Route):
@@ -111,8 +126,8 @@ class PtyHandler(Route):
         await socket.proxy.pty.output(data=data)
 
     @decorators.proxy
-    async def ready(self) -> None:
-        await self.terminal
+    async def ready(self, width: int, height: int) -> None:
+        await self.resize(width=width, height=height)
 
     @decorators.proxy
     async def input(self, data: str) -> None:
