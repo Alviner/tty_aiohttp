@@ -10,11 +10,11 @@ from tty_aiohttp.utils.argparse import Environment, positive_int
 
 parser = configargparse.ArgumentParser(
     allow_abbrev=False,
-    auto_env_var_prefix="APP_ADMIN_",
+    auto_env_var_prefix="APP_",
     description="TTY web application",
     default_config_files=[
-        os.path.join(os.path.expanduser("~"), ".config/tty_aiohttp/admin.conf"),
-        "/etc/tty_aiohttp/admin.conf",
+        os.path.join(os.path.expanduser("~"), ".config/tty_aiohttp/app.conf"),
+        "/etc/tty_aiohttp/app.conf",
     ],
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     ignore_unknown_config_file_keys=True,

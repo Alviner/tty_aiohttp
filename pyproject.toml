@@ -9,8 +9,8 @@ packages = [
 ]
 include = [
   "tty_aiohttp/version.py",
-  "tty_aiohttp/admin/static",
-  "tty_aiohttp/admin/template",
+  "tty_aiohttp/app/static",
+  "tty_aiohttp/app/template",
 ]
 
 [tool.poetry.dependencies]
