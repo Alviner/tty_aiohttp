@@ -3,6 +3,9 @@ import WSRPC from "@wsrpc/client";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebglAddon } from "@xterm/addon-webgl";
+import { ClipboardAddon } from "@xterm/addon-clipboard";
+import { SearchAddon } from "@xterm/addon-search";
+import { WebLinksAddon } from "@xterm/addon-web-links";
 import "@xterm/xterm/css/xterm.css";
 
 import { createApp } from "vue/dist/vue.esm-bundler.js";
@@ -19,6 +22,9 @@ export {
   Terminal,
   FitAddon,
   WebglAddon,
+  ClipboardAddon,
+  SearchAddon,
+  WebLinksAddon,
   createApp,
   elementPlus,
   elementPlusLocale,

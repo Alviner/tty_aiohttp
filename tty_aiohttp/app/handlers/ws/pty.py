@@ -11,18 +11,22 @@ from logging import getLogger
 
 from aiomisc.thread_pool import threaded
 from wsrpc_aiohttp import Route, WSRPCBase, decorators
+from wsrpc_aiohttp.websocket.abc import ProxyMethod
 
 log = getLogger(__name__)
 
 
-@threaded
-def pty_open() -> tuple[int, int]:
-    return pty.openpty()
+@dataclass
+class PTYConfig:
+    master_fd: int
+    slave_fd: int
+    shell: str
 
-
-@threaded
-def os_write(fd: int, chunk: bytes):
-    os.write(fd, chunk)
+    @classmethod
+    @threaded
+    def open_pty(cls, shell: str) -> "PTYConfig":
+        master_fd, slave_fd = pty.openpty()
+        return cls(master_fd, slave_fd, shell)
 
 
 @dataclass
@@ -31,14 +35,14 @@ class Terminal:
     fd: int
     read_queue: asyncio.Queue[str]
     write_queue: asyncio.Queue[str]
-
-    read_cb: t.Callable[[str], t.Awaitable[None]]
+    proxy: ProxyMethod
 
     _read_task: asyncio.Task[None] = field(init=False)
     _write_task: asyncio.Task[None] = field(init=False)
     _monitor_task: asyncio.Task[None] = field(init=False)
 
     def __post_init__(self) -> None:
+        """Initialize terminal tasks"""
         self._write_task = asyncio.create_task(self._write())
         self._read_task = asyncio.create_task(self._read())
         self._monitor_task = asyncio.create_task(self._monitor())
@@ -48,7 +52,8 @@ class Terminal:
     async def _read(self) -> None:
         while True:
             chunk = await self.read_queue.get()
-            await self.read_cb(chunk)
+            await self.proxy.output(data=chunk)
+
 
     async def write(self, chunk: str) -> None:
         await self.write_queue.put(chunk)
@@ -56,7 +61,11 @@ class Terminal:
     async def _write(self) -> None:
         while True:
             chunk = await self.write_queue.get()
-            await os_write(self.fd, chunk.encode("utf-8"))
+            await self._do_write(chunk.encode("utf-8"))
+
+    @threaded
+    def _do_write(self, chunk: bytes) -> None:
+        os.write(self.fd, chunk)
 
     def on_read(self) -> None:
         max_read_bytes = 1024 * 20
@@ -84,6 +93,7 @@ class Terminal:
         loop.remove_reader(self.fd)
         self._read_task.cancel()
         self._write_task.cancel()
+        await self.proxy.notify(type="error", title="Terminal is closed", message=f"Shell was closed with return code {self.process.returncode}")
 
     async def close(self) -> None:
         if (return_code := self.process.returncode) is not None:
@@ -105,25 +115,23 @@ class PtyHandler(Route):
     async def terminal(self) -> Terminal:
         if self._terminal is not None:
             return self._terminal
-        master_fd, slave_fd = await pty_open()
+        pty_config = await PTYConfig.open_pty(self.shell)
         process = await asyncio.create_subprocess_exec(
             self.shell,
             preexec_fn=os.setsid,
-            stdin=slave_fd,
-            stdout=slave_fd,
-            stderr=slave_fd,
+            stdin=pty_config.slave_fd,
+            stdout=pty_config.slave_fd,
+            stderr=pty_config.slave_fd,
             env=os.environ.copy(),
         )
+        socket: WSRPCBase = self.socket  # type: ignore
         terminal = Terminal(
-            process, master_fd, asyncio.Queue(), asyncio.Queue(), self.on_read
+            process, pty_config.master_fd, asyncio.Queue(), asyncio.Queue(),
+            socket.proxy.pty,
         )
 
         self._terminal = terminal
         return self._terminal
-
-    async def on_read(self, data: str | bytes) -> None:
-        socket: WSRPCBase = self.socket  # type: ignore
-        await socket.proxy.pty.output(data=data)
 
     @decorators.proxy
     async def ready(self, width: int, height: int) -> None:
@@ -132,13 +140,11 @@ class PtyHandler(Route):
     @decorators.proxy
     async def input(self, data: str) -> None:
         terminal = await self.terminal
-
         await terminal.write(data)
 
     @decorators.proxy
     async def resize(self, width: int, height: int) -> None:
         terminal = await self.terminal
-
         await terminal.resize(width=width, height=height)
 
     async def _onclose(self) -> None:  # type: ignore
