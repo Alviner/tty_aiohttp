@@ -425,10 +425,27 @@
   resolved "https://registry.yarnpkg.com/@wsrpc/client/-/client-4.4.1.tgz#fe83751ca28e13246793d6e5a716f9e6b55cdcc4"
   integrity sha512-UiTW/FS2AQ7Cd+zAN7TAw4+7KqGwJK2pw2PECVGrF4As73qISGonEehqugmnb1XgU5m5A2NogmGPYTeb5vMMDQ==
 
+"@xterm/addon-clipboard@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@xterm/addon-clipboard/-/addon-clipboard-0.1.0.tgz#306f5542b53deb4d8b83a141879de0ea8a851628"
+  integrity sha512-zdoM7p53T5sv/HbRTyp4hY0kKmEQ3MZvAvEtiXqNIHc/JdpqwByCtsTaQF5DX2n4hYdXRPO4P/eOS0QEhX1nPw==
+  dependencies:
+    js-base64 "^3.7.5"
+
 "@xterm/addon-fit@^0.10.0":
   version "0.10.0"
   resolved "https://registry.yarnpkg.com/@xterm/addon-fit/-/addon-fit-0.10.0.tgz#bebf87fadd74e3af30fdcdeef47030e2592c6f55"
   integrity sha512-UFYkDm4HUahf2lnEyHvio51TNGiLK66mqP2JoATy7hRZeXaGMRDr00JiSF7m63vR5WKATF605yEggJKsw0JpMQ==
+
+"@xterm/addon-search@^0.15.0":
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/@xterm/addon-search/-/addon-search-0.15.0.tgz#5c772d5f14c26546c4bfbeb0c3d4b3333057411f"
+  integrity sha512-ZBZKLQ+EuKE83CqCmSSz5y1tx+aNOCUaA7dm6emgOX+8J9H1FWXZyrKfzjwzV+V14TV3xToz1goIeRhXBS5qjg==
+
+"@xterm/addon-web-links@^0.11.0":
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/@xterm/addon-web-links/-/addon-web-links-0.11.0.tgz#f283513b8c713757bad8e3bf04b6becc3b4e585f"
+  integrity sha512-nIHQ38pQI+a5kXnRaTgwqSHnX7KE6+4SVoceompgHL26unAxdfP6IPqUTSYPQgSwM56hsElfoNrrW5V7BUED/Q==
 
 "@xterm/addon-webgl@^0.18.0":
   version "0.18.0"
@@ -861,6 +878,11 @@ isexe@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/isexe/-/isexe-2.0.0.tgz#e8fbf374dc556ff8947a10dcb0572d633f2cfa10"
   integrity sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==
+
+js-base64@^3.7.5:
+  version "3.7.7"
+  resolved "https://registry.yarnpkg.com/js-base64/-/js-base64-3.7.7.tgz#e51b84bf78fbf5702b9541e2cb7bfcb893b43e79"
+  integrity sha512-7rCnleh0z2CkXhH67J8K1Ytz0b2Y+yxTPL+/KOJoa20hfnVQ/3/T6W/KflYI4bRHRagNeXeU2bkNGI3v1oS/lw==
 
 js-yaml@^4.1.0:
   version "4.1.0"

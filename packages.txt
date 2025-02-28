@@ -3,3 +3,4 @@ git
 vim
 neovim
 curl
+htop
