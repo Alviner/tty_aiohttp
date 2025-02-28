@@ -93,11 +93,20 @@ class Terminal:
         loop.remove_reader(self.fd)
         self._read_task.cancel()
         self._write_task.cancel()
-        await self.proxy.notify(type="error", title="Terminal is closed", message=f"Shell was closed with return code {self.process.returncode}")
+        message = f"""Shell was closed
+with return code {self.process.returncode}"""
+        await self.proxy.notify(
+            type="error",
+            title="Terminal is closed",
+            message=message,
+        )
 
     async def close(self) -> None:
         if (return_code := self.process.returncode) is not None:
-            log.info("Process was already closed with return code %s", return_code)
+            log.info(
+                "Process was already closed with return code %s",
+                return_code,
+            )
             return
         self.process.kill()
 
