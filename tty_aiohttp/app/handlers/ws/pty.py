@@ -174,8 +174,7 @@ class PtyHandler(Route):
 
     def _onclose(self) -> t.Any:  # type: ignore
         log.info("Closing terminal")
-        terminal = self._terminal
-        self._terminal = None
+        terminal, self._terminal = self._terminal, None
         if terminal is None:
             return
         return terminal.close()
