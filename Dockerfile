@@ -22,6 +22,7 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
 COPY --from=builder /usr/share/python3/app /usr/share/python3/app
 RUN xargs -ra /usr/share/python3/app/pkgdeps.txt apt-install
 RUN find /usr/share/python3/app/bin/ -name 'tty_aiohttp*' -exec ln -snf '{}' /usr/bin/ ';'
+ENV APP_API_ADDRESS=0.0.0.0
 
 
-CMD ["tty_aiohttp", "--api-address", "0.0.0.0"]
+CMD ["tty_aiohttp"]
