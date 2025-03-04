@@ -19,10 +19,13 @@ all:
 	@echo "make purge 		- Complete cleanup the project"
 	@exit 0
 
+static:
+	yarn build
+
 wheel:
 	poetry build -f wheel
 
-build: clean wheel
+build: clean static wheel
 	docker build -t $(CI_REGISTRY_IMAGE):$(DOCKER_TAG) --target release .
 
 clean:
@@ -39,7 +42,6 @@ lint:
 format:
 	poetry run gray $(PROJECT_PATH) tests
 	poetry run ruff $(PROJECT_PATH) tests --fix
-	yarn lint-fix
 
 purge: clean
 	rm -rf ./.venv
@@ -61,6 +63,3 @@ develop: clean
 	poetry -V
 	poetry install
 	yarn install
-
-build-vendor:
-	yarn build

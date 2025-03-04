@@ -9,11 +9,14 @@ from asyncio.subprocess import Process
 from dataclasses import dataclass, field
 from logging import getLogger
 
+from aiohttp import web
 from aiomisc.thread_pool import threaded
 from wsrpc_aiohttp import Route, WSRPCBase, decorators
 from wsrpc_aiohttp.websocket.abc import ProxyMethod
 
 log = getLogger(__name__)
+
+SHELL_KEY = web.AppKey("shell")
 
 
 @dataclass
@@ -53,7 +56,6 @@ class Terminal:
         while True:
             chunk = await self.read_queue.get()
             await self.proxy.output(data=chunk)
-
 
     async def write(self, chunk: str) -> None:
         await self.write_queue.put(chunk)
@@ -118,7 +120,7 @@ class PtyHandler(Route):
 
     @property
     def shell(self) -> str:
-        return self.socket.request.app["shell"]  # type: ignore
+        return self.socket.request.app[SHELL_KEY]  # type: ignore
 
     @property
     async def terminal(self) -> Terminal:
@@ -135,7 +137,10 @@ class PtyHandler(Route):
         )
         socket: WSRPCBase = self.socket  # type: ignore
         terminal = Terminal(
-            process, pty_config.master_fd, asyncio.Queue(), asyncio.Queue(),
+            process,
+            pty_config.master_fd,
+            asyncio.Queue(),
+            asyncio.Queue(),
             socket.proxy.pty,
         )
 
