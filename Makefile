@@ -36,12 +36,12 @@ clean-pyc:
 
 lint:
 	poetry run mypy $(PROJECT_PATH)
-	poetry run ruff $(PROJECT_PATH) tests
+	poetry run ruff check $(PROJECT_PATH) tests
 
 
 format:
 	poetry run gray $(PROJECT_PATH) tests
-	poetry run ruff $(PROJECT_PATH) tests --fix
+	poetry run ruff format $(PROJECT_PATH) tests
 
 purge: clean
 	rm -rf ./.venv
