@@ -1,6 +1,7 @@
 import WSRPC from "@wsrpc/client";
 
-import elementPlus, { ElLoading as Loading } from "element-plus";
+import { ElLoading as Loading } from "element-plus";
+import 'element-plus/es/components/loading/style/css'
 
 const wsrpc = new WSRPC("/ws/");
 let loading;
