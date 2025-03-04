@@ -3,16 +3,15 @@ from itertools import chain
 from typing import Any
 
 from aiohttp import web
-from aiohttp.web_app import Application
+from aiohttp.web_app import Application, Middleware
 from aiomisc.service.aiohttp import AIOHTTPService
 from wsrpc_aiohttp import WebSocketAsync
 
-from tty_aiohttp.app import STATIC_ROOT
-from tty_aiohttp.app.handlers.index import IndexHandler
+from tty_aiohttp.app import ASSETS_ROOT
+from tty_aiohttp.app.handlers.index import IconHandler, IndexHandler
 from tty_aiohttp.app.handlers.static import StaticResource
 from tty_aiohttp.app.handlers.v1.ping import PingHandler
-from tty_aiohttp.app.handlers.ws.pty import PtyHandler
-from tty_aiohttp.app.middlewares import vue_router_middleware
+from tty_aiohttp.app.handlers.ws.pty import SHELL_KEY, PtyHandler
 from tty_aiohttp.app.utils.serializers import config_serializers
 from tty_aiohttp.utils.argparse import Environment
 
@@ -30,11 +29,12 @@ class REST(AIOHTTPService):
     env: Environment
     shell: str = DEFAULT_SHELL
 
-    _middlewares = (vue_router_middleware,)
+    _middlewares: tuple[Middleware, ...] = tuple()
     __dependencies__: tuple[str, ...] = tuple()
 
     API_ROUTES: ApiHandlersType = (
         ("GET", "/", IndexHandler),
+        ("GET", "/icon.svg", IconHandler),
         ("GET", "/api/v1/ping", PingHandler),
     )
 
@@ -63,12 +63,12 @@ class REST(AIOHTTPService):
                 handler=handler,
             )
 
-        app.router.register_resource(StaticResource("/static", STATIC_ROOT))
+        app.router.register_resource(StaticResource("/assets", ASSETS_ROOT))
 
     def _set_dependencies(self, app: Application) -> None:
         for name in chain(self.__required__, self.__dependencies__):
             app[name] = getattr(self, name)
-        app["shell"] = self.shell
+        app[SHELL_KEY] = self.shell
 
     def _add_middlewares(self, app: web.Application) -> None:
         for middleware in self._middlewares:

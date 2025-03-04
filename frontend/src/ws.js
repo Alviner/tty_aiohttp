@@ -1,4 +1,6 @@
-import { Loading, WSRPC } from "vendor";
+import WSRPC from "@wsrpc/client";
+
+import elementPlus, { ElLoading as Loading } from "element-plus";
 
 const wsrpc = new WSRPC("/ws/");
 let loading;
