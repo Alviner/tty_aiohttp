@@ -120,7 +120,7 @@ class PtyHandler(Route):
 
     @property
     def shell(self) -> str:
-        return self.socket.request.app[SHELL_KEY]  # type: ignore
+        return self.socket.request.app[SHELL_KEY]
 
     @property
     async def terminal(self) -> Terminal:
