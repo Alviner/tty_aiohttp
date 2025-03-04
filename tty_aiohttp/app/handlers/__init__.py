@@ -7,7 +7,6 @@ from aiohttp import web
 
 
 class BaseHandler(web.View):
-
     def json_response(
         self, data: Any, headers: Mapping[str, str], status: HTTPStatus
     ) -> web.Response:
