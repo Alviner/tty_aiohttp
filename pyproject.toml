@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tty_aiohttp"
-version = "0.0.1"
+version = "0.1.0"
 description = "TTY web application"
 authors = ["Ivan Sitkin <falvinera@yandex.ru>"]
 readme = "README.md"
