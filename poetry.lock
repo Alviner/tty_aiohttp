@@ -159,14 +159,14 @@ speedups = ["Brotli ; platform_python_implementation == \"CPython\"", "aiodns (>
 
 [[package]]
 name = "aiomisc"
-version = "17.6.3"
+version = "17.7.3"
 description = "aiomisc - miscellaneous utils for asyncio"
 optional = false
-python-versions = "<4.0,>=3.8"
+python-versions = "<4.0,>=3.9"
 groups = ["main", "test"]
 files = [
-    {file = "aiomisc-17.6.3-py3-none-any.whl", hash = "sha256:c25f4c0efc1c4add65e4945fdec66888973f141f68fdf0c4365388065adf645e"},
-    {file = "aiomisc-17.6.3.tar.gz", hash = "sha256:fd93ce2544f84b23c67a9dd548a3781a9568fc69a827f26f09ae60d38da8db0e"},
+    {file = "aiomisc-17.7.3-py3-none-any.whl", hash = "sha256:b4eedab1f2636e9ba378b94ada8b973648af49d06e8c270f61e0f9a81d190373"},
+    {file = "aiomisc-17.7.3.tar.gz", hash = "sha256:c3d4afa2a650615ec14bc15cfc44a0bfe010fdf61226ba9506decea24ca93527"},
 ]
 
 [package.dependencies]
@@ -185,7 +185,7 @@ grpc = ["grpcio (>=1.56,<2.0)", "grpcio-reflection (>=1.56,<2.0)", "grpcio-tools
 raven = ["aiohttp (>3)", "raven"]
 rich = ["rich"]
 uvicorn = ["asgiref (>=3.7,<4.0)", "uvicorn (>=0.27,<0.28)"]
-uvloop = ["uvloop (>=0.19,<1)"]
+uvloop = ["uvloop (>=0.21,<1)"]
 
 [[package]]
 name = "aiomisc-dependency"
@@ -2141,4 +2141,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12.0"
-content-hash = "3ed7f2a8ea549c2e81537e02059f191f4e6a38ecb17445e472dc5eee0802c010"
+content-hash = "b0b093f24ee1aeb8dc96169e1fd1dff07a97ca540c5f3dfc1dd04e9a9459e790"
