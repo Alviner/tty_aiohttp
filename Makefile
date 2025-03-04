@@ -29,8 +29,9 @@ build: clean wheel
 	docker build -t $(CI_REGISTRY_IMAGE):$(DOCKER_TAG) --target release .
 
 
-release: clean wheel
-	docker buildx build  --platform linux/amd64,linux/arm64 -t $(CI_REGISTRY_IMAGE):$(DOCKER_TAG) --target release . --push
+release: clean wheel build
+    docker push $(CI_REGISTRY_IMAGE):$(DOCKER_TAG)
+
 
 clean:
 	rm -fr dist
