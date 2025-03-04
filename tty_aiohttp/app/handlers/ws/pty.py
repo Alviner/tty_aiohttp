@@ -16,7 +16,7 @@ from wsrpc_aiohttp.websocket.abc import ProxyMethod
 
 log = getLogger(__name__)
 
-SHELL_KEY = web.AppKey("shell")
+SHELL_KEY: web.AppKey[str] = web.AppKey("shell")
 
 
 @dataclass
