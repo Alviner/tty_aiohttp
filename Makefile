@@ -25,7 +25,7 @@ static:
 wheel:
 	poetry build -f wheel
 
-build: clean static wheel
+build: clean wheel
 	docker build -t $(CI_REGISTRY_IMAGE):$(DOCKER_TAG) --target release .
 
 clean:
