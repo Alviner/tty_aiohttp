@@ -6,6 +6,10 @@ on:
 
 jobs:
   release:
+    permissions:
+      id-token: write
+      packages: write
+
     runs-on: ubuntu-latest
 
     steps:
