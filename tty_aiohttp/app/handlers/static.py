@@ -44,9 +44,6 @@ class StaticResource(web.StaticResource):
         return os.stat(fname)
 
     async def _handle(self, request: web.Request) -> web.StreamResponse:
-        import pdb
-
-        pdb.set_trace()
         directory = Path(self._directory)
         filename = request.match_info["filename"]
         file_path = (directory / filename).resolve()
