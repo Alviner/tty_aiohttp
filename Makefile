@@ -10,13 +10,13 @@ CI_REGISTRY_IMAGE ?= $(CI_REGISTRY)/$(CI_PROJECT_NAMESPACE)/$(CI_PROJECT_NAME)
 DOCKER_TAG = $(shell echo $(VERSION) | tr '+' '-')
 
 all:
-	@echo "make build 		- Build a docker image"
-	@echo "make lint 			- Syntax check python with ruff and mypy"
-	@echo "make pytest 		- Test this project"
-	@echo "make format 		- Format project with gray"
-	@echo "make upload 		- Upload this project to the docker-registry"
-	@echo "make clean 		- Remove files which creates by distutils"
-	@echo "make purge 		- Complete cleanup the project"
+	@echo "make build          - Build a docker image"
+	@echo "make lint           - Syntax check python with ruff and mypy"
+	@echo "make pytest         - Test this project"
+	@echo "make format         - Format project with gray"
+	@echo "make upload         - Upload this project to the docker-registry"
+	@echo "make clean          - Remove files which creates by distutils"
+	@echo "make purge          - Complete cleanup the project"
 	@exit 0
 
 static:
@@ -27,6 +27,11 @@ wheel:
 
 build: clean wheel
 	docker build -t $(CI_REGISTRY_IMAGE):$(DOCKER_TAG) --target release .
+
+
+release: clean wheel build
+    docker push $(CI_REGISTRY_IMAGE):$(DOCKER_TAG)
+
 
 clean:
 	rm -fr dist
