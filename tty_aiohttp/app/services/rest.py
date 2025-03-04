@@ -7,8 +7,8 @@ from aiohttp.web_app import Application
 from aiomisc.service.aiohttp import AIOHTTPService
 from wsrpc_aiohttp import WebSocketAsync
 
-from tty_aiohttp.app import STATIC_ROOT
-from tty_aiohttp.app.handlers.index import IndexHandler
+from tty_aiohttp.app import ASSETS_ROOT
+from tty_aiohttp.app.handlers.index import IconHandler, IndexHandler
 from tty_aiohttp.app.handlers.static import StaticResource
 from tty_aiohttp.app.handlers.v1.ping import PingHandler
 from tty_aiohttp.app.handlers.ws.pty import PtyHandler
@@ -35,6 +35,7 @@ class REST(AIOHTTPService):
 
     API_ROUTES: ApiHandlersType = (
         ("GET", "/", IndexHandler),
+        ("GET", "/icon.svg", IconHandler),
         ("GET", "/api/v1/ping", PingHandler),
     )
 
@@ -63,7 +64,7 @@ class REST(AIOHTTPService):
                 handler=handler,
             )
 
-        app.router.register_resource(StaticResource("/static", STATIC_ROOT))
+        app.router.register_resource(StaticResource("/assets", ASSETS_ROOT))
 
     def _set_dependencies(self, app: Application) -> None:
         for name in chain(self.__required__, self.__dependencies__):
