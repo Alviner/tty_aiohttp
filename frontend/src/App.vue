@@ -1,6 +1,7 @@
 <script>
 import wsrpc from "./ws.js";
 import { ElNotification as Notification } from "element-plus";
+import 'element-plus/es/components/notification/style/css'
 import "@xterm/xterm/css/xterm.css";
 
 import { Terminal } from "@xterm/xterm";
