@@ -28,11 +28,6 @@ wheel:
 build: clean wheel
 	docker build -t $(CI_REGISTRY_IMAGE):$(DOCKER_TAG) --target release .
 
-
-release: clean wheel build
-    docker push $(CI_REGISTRY_IMAGE):$(DOCKER_TAG)
-
-
 clean:
 	rm -fr dist
 
