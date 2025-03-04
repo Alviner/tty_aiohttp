@@ -2027,24 +2027,19 @@ zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
 name = "wsrpc-aiohttp"
-version = "3.2.0"
+version = "4.0.3"
 description = "WSRPC is the RPC over WebSocket for aiohttp"
 optional = false
-python-versions = ">3.5.*, <4"
+python-versions = ">=3.8,<4.0"
 groups = ["main"]
 files = [
-    {file = "wsrpc-aiohttp-3.2.0.tar.gz", hash = "sha256:f467abc51bcdc760fc5aeb7041abdeef46eeca3928dc43dd6e7fa7a533563818"},
-    {file = "wsrpc_aiohttp-3.2.0-py3-none-any.whl", hash = "sha256:fa9b0bf5cb056898cb5c9f64cbc5eacb8a5dd18ab1b7f0cd4a2208b4a7fde282"},
+    {file = "wsrpc_aiohttp-4.0.3-py3-none-any.whl", hash = "sha256:8389cb6f40bdceda5b912a58aeb18aed859c7898fd20fdd8509fc5821ff03a49"},
+    {file = "wsrpc_aiohttp-4.0.3.tar.gz", hash = "sha256:e1040fcea22d73274cbbe188535b9a4611e450c4d7fa2ef5b11b15b650f51ff4"},
 ]
 
 [package.dependencies]
 aiohttp = "<4"
 yarl = "*"
-
-[package.extras]
-develop = ["Sphinx", "async-timeout", "coverage (!=4.3)", "coveralls", "pytest", "pytest-aiohttp", "pytest-cov", "sphinxcontrib-plantuml", "tox (>=2.4)"]
-testing = ["async-timeout", "coverage (!=4.3)", "coveralls", "pytest", "pytest-aiohttp", "pytest-cov"]
-ujson = ["ujson"]
 
 [[package]]
 name = "yarl"
@@ -2146,4 +2141,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12.0"
-content-hash = "003edeb9982317db2c1cfc8745d5ca4701e050e5bd6f78cb2320df699e4a41d7"
+content-hash = "3ed7f2a8ea549c2e81537e02059f191f4e6a38ecb17445e472dc5eee0802c010"
