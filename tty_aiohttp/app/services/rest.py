@@ -12,7 +12,6 @@ from tty_aiohttp.app.handlers.index import IconHandler, IndexHandler
 from tty_aiohttp.app.handlers.static import StaticResource
 from tty_aiohttp.app.handlers.v1.ping import PingHandler
 from tty_aiohttp.app.handlers.ws.pty import PtyHandler
-from tty_aiohttp.app.middlewares import vue_router_middleware
 from tty_aiohttp.app.utils.serializers import config_serializers
 from tty_aiohttp.utils.argparse import Environment
 
@@ -30,7 +29,7 @@ class REST(AIOHTTPService):
     env: Environment
     shell: str = DEFAULT_SHELL
 
-    _middlewares = (vue_router_middleware,)
+    _middlewares = tuple()
     __dependencies__: tuple[str, ...] = tuple()
 
     API_ROUTES: ApiHandlersType = (
@@ -68,8 +67,8 @@ class REST(AIOHTTPService):
 
     def _set_dependencies(self, app: Application) -> None:
         for name in chain(self.__required__, self.__dependencies__):
-            app[name] = getattr(self, name)
-        app["shell"] = self.shell
+            app[web.AppKey(name)] = getattr(self, name)
+        app[web.AppKey("shell")] = self.shell
 
     def _add_middlewares(self, app: web.Application) -> None:
         for middleware in self._middlewares:
