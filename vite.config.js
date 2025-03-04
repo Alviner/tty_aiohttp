@@ -25,7 +25,7 @@ export default defineConfig({
     }),
     ElementPlus(),
     compression({
-      include: /\.(js|css|map|json|ico|eot|otf|ttf|woff|woff2)$/,
+      include: /\.(js|css|map|json|eot|otf|ttf|woff|woff2)$/,
       deleteOriginalAssets: true,
     }),
   ],

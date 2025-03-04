@@ -77,12 +77,12 @@ class Terminal:
     @threaded
     def resize(
         self,
-        width: int,
-        height: int,
+        rows: int,
+        cols: int,
         xpix: int = 0,
         ypix: int = 0,
     ) -> None:
-        winsize = struct.pack("HHHH", height, width, xpix, ypix)
+        winsize = struct.pack("HHHH", rows, cols, xpix, ypix)
         fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
 
     async def _monitor(self) -> None:
@@ -148,8 +148,8 @@ class PtyHandler(Route):
         return self._terminal
 
     @decorators.proxy
-    async def ready(self, width: int, height: int) -> None:
-        await self.resize(width=width, height=height)
+    async def ready(self, cols: int, rows: int) -> None:
+        await self.resize(cols=cols, rows=rows)
 
     @decorators.proxy
     async def input(self, data: str) -> None:
@@ -157,9 +157,9 @@ class PtyHandler(Route):
         await terminal.write(data)
 
     @decorators.proxy
-    async def resize(self, width: int, height: int) -> None:
+    async def resize(self, rows: int, cols: int) -> None:
         terminal = await self.terminal
-        await terminal.resize(width=width, height=height)
+        await terminal.resize(rows=rows, cols=cols)
 
     async def _onclose(self) -> None:  # type: ignore
         log.debug("Closing terminal")
