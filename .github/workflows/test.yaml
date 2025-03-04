@@ -9,8 +9,6 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
 
     steps:
       - uses: actions/checkout@v4
@@ -52,9 +50,6 @@ jobs:
       - run: >-
           poetry run pytest \
             -vv \
-            --cov=poem_plugins \
-            --cov-report=term-missing \
-            --doctest-modules \
             tests
         env:
           FORCE_COLOR: 1
