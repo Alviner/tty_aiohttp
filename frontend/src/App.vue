@@ -39,6 +39,10 @@ export default {
         this.term.onData(async (data) => {
             await this.$wsrpc.proxy.pty.input({ data });
         });
+        this.term.onResize(async ({ cols, rows }) => {
+            console.log("resize term", cols, rows);
+            await this.$wsrpc.proxy.pty.resize({ rows, cols });
+        });
 
         this.$wsrpc.addEventListener("onconnect", this.ready);
         this.$wsrpc.addRoute("pty.notify", this.notify);
@@ -58,16 +62,15 @@ export default {
     },
     methods: {
         async fitToscreen() {
+            console.log("fitting screen");
             this.fit.fit();
-            const dims = { width: this.term.cols, height: this.term.rows };
-            await this.$wsrpc.proxy.pty.resize(dims);
         },
         output({ data }) {
             this.term.write(data);
         },
         async ready() {
             this.fit.fit();
-            const dims = { width: this.term.cols, height: this.term.rows };
+            const dims = { cols: this.term.cols, rows: this.term.rows };
             await this.$wsrpc.proxy.pty.ready(dims);
         },
         async notify({ title, message, type }) {
@@ -82,5 +85,12 @@ export default {
 </script>
 
 <template>
-    <div style="width: 100vw; height: 100vh" ref="terminal"></div>
+    <div class="terminal" ref="terminal"></div>
 </template>
+
+<style scoped>
+.terminal {
+    width: 100%;
+    height: 100%;
+}
+</style>
