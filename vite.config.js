@@ -14,7 +14,7 @@ export default defineConfig({
   plugins: [
     vue(),
     compression({
-      include: /\.(js|css|json|ico|eot|otf|ttf|woff|woff2)$/,
+      include: /\.(js|css|map|json|ico|eot|otf|ttf|woff|woff2)$/,
       deleteOriginalAssets: true,
     }),
   ],
