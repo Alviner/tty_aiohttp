@@ -36,6 +36,7 @@ class PTYConfig:
 class Terminal:
     process: Process
     fd: int
+    slave_fd: int
     read_queue: asyncio.Queue[str]
     write_queue: asyncio.Queue[str]
     proxy: ProxyMethod
@@ -69,6 +70,10 @@ class Terminal:
     def _do_write(self, chunk: bytes) -> None:
         os.write(self.fd, chunk)
 
+    @threaded
+    def _do_close(self, fd: int) -> None:
+        os.close(fd)
+
     def on_read(self) -> None:
         max_read_bytes = 1024 * 20
         output = os.read(self.fd, max_read_bytes).decode(errors="ignore")
@@ -95,6 +100,8 @@ class Terminal:
         loop.remove_reader(self.fd)
         self._read_task.cancel()
         self._write_task.cancel()
+        await self._do_close(self.fd)
+        await self._do_close(self.slave_fd)
         message = f"""Shell was closed
 with return code {self.process.returncode}"""
         await self.proxy.notify(
@@ -117,6 +124,7 @@ class PtyHandler(Route):
     def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._terminal: Terminal | None = None
+        self._lock: asyncio.Lock = asyncio.Lock()
 
     @property
     def shell(self) -> str:
@@ -124,28 +132,31 @@ class PtyHandler(Route):
 
     @property
     async def terminal(self) -> Terminal:
-        if self._terminal is not None:
-            return self._terminal
-        pty_config = await PTYConfig.open_pty(self.shell)
-        process = await asyncio.create_subprocess_exec(
-            self.shell,
-            preexec_fn=os.setsid,
-            stdin=pty_config.slave_fd,
-            stdout=pty_config.slave_fd,
-            stderr=pty_config.slave_fd,
-            env=os.environ.copy(),
-        )
-        socket: WSRPCBase = self.socket  # type: ignore
-        terminal = Terminal(
-            process,
-            pty_config.master_fd,
-            asyncio.Queue(),
-            asyncio.Queue(),
-            socket.proxy.pty,
-        )
+        async with self._lock:
+            if self._terminal is not None:
+                return self._terminal
 
-        self._terminal = terminal
-        return self._terminal
+            pty_config = await PTYConfig.open_pty(self.shell)
+            socket: WSRPCBase = self.socket  # type: ignore
+
+            process = await asyncio.create_subprocess_exec(
+                self.shell,
+                preexec_fn=os.setsid,
+                stdin=pty_config.slave_fd,
+                stdout=pty_config.slave_fd,
+                stderr=pty_config.slave_fd,
+                env=os.environ.copy(),
+                close_fds=True,
+            )
+            self._terminal = Terminal(
+                process,
+                pty_config.master_fd,
+                pty_config.slave_fd,
+                asyncio.Queue(),
+                asyncio.Queue(),
+                socket.proxy.pty,
+            )
+            return self._terminal
 
     @decorators.proxy
     async def ready(self, cols: int, rows: int) -> None:
@@ -161,7 +172,10 @@ class PtyHandler(Route):
         terminal = await self.terminal
         await terminal.resize(rows=rows, cols=cols)
 
-    async def _onclose(self) -> None:  # type: ignore
-        log.debug("Closing terminal")
-        terminal = await self.terminal
-        await terminal.close()
+    def _onclose(self) -> t.Any:  # type: ignore
+        log.info("Closing terminal")
+        terminal = self._terminal
+        self._terminal = None
+        if terminal is None:
+            return
+        return terminal.close()
