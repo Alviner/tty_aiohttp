@@ -2,7 +2,6 @@ name: release
 
 on:
   push:
-    branches: [main]
     tags: ["v*"]
 
 jobs:
@@ -41,8 +40,10 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          visibility: public
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v2
