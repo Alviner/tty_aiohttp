@@ -34,4 +34,3 @@ jobs:
       - run: make release
         env:
           CI_REGISTRY: ghcr.io
-          CI_PROJECT_NAME: ${{ github.repository }}
