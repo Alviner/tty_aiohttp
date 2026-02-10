@@ -7,7 +7,7 @@ from aiohttp.web_app import Application, Middleware
 from aiomisc.service.aiohttp import AIOHTTPService
 from wsrpc_aiohttp import WebSocketAsync
 
-from tty_aiohttp.app import ASSETS_ROOT
+from tty_aiohttp.app import ASSETS_ROOT, FONTS_ROOT
 from tty_aiohttp.app.handlers.index import IconHandler, IndexHandler
 from tty_aiohttp.app.handlers.static import StaticResource
 from tty_aiohttp.app.handlers.v1.ping import PingHandler
@@ -64,6 +64,7 @@ class REST(AIOHTTPService):
             )
 
         app.router.register_resource(StaticResource("/assets", ASSETS_ROOT))
+        app.router.register_resource(StaticResource("/fonts", FONTS_ROOT))
 
     def _set_dependencies(self, app: Application) -> None:
         for name in chain(self.__required__, self.__dependencies__):
