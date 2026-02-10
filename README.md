@@ -96,7 +96,7 @@ make upload
 ### Run
 
 ```bash
-docker run -d -p 9090:9090 ghcr.io/alviner/ttyaiohttp:latest
+docker run -d -p 9090:9090 ghcr.io/alviner/tty_aiohttp:latest
 ```
 
 Open http://localhost:9090 in a browser.
@@ -108,7 +108,7 @@ docker run -d \
   -p 8080:8080 \
   -e APP_API_PORT=8080 \
   -e APP_SHELL=/bin/bash \
-  ghcr.io/alviner/ttyaiohttp:latest
+  ghcr.io/alviner/tty_aiohttp:latest
 ```
 
 The Docker image is based on `snakepacker/python:3.13` and includes zsh, git, vim, neovim, curl, htop, and oh-my-zsh.
