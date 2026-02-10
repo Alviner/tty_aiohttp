@@ -36,74 +36,78 @@ class PTYConfig:
 class Terminal:
     process: Process
     fd: int
-    slave_fd: int
-    read_queue: asyncio.Queue[str]
-    write_queue: asyncio.Queue[str]
     proxy: ProxyMethod
 
+    _read_queue: asyncio.Queue[str] = field(
+        init=False, default_factory=asyncio.Queue,
+    )
+    _write_queue: asyncio.Queue[str] = field(
+        init=False, default_factory=asyncio.Queue,
+    )
     _read_task: asyncio.Task[None] = field(init=False)
     _write_task: asyncio.Task[None] = field(init=False)
     _monitor_task: asyncio.Task[None] = field(init=False)
 
     def __post_init__(self) -> None:
-        """Initialize terminal tasks"""
         self._write_task = asyncio.create_task(self._write())
         self._read_task = asyncio.create_task(self._read())
         self._monitor_task = asyncio.create_task(self._monitor())
-        loop = asyncio.get_event_loop()
-        loop.add_reader(self.fd, self.on_read)
+        asyncio.get_running_loop().add_reader(self.fd, self._on_read)
 
     async def _read(self) -> None:
-        while True:
-            chunk = await self.read_queue.get()
-            await self.proxy.output(data=chunk)
+        try:
+            while True:
+                chunk = await self._read_queue.get()
+                await self.proxy.output(data=chunk)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            log.exception("Error in terminal read task")
 
     async def write(self, chunk: str) -> None:
-        await self.write_queue.put(chunk)
+        await self._write_queue.put(chunk)
 
     async def _write(self) -> None:
-        while True:
-            chunk = await self.write_queue.get()
-            await self._do_write(chunk.encode("utf-8"))
+        try:
+            while True:
+                chunk = await self._write_queue.get()
+                await self._do_write(chunk.encode("utf-8"))
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            log.exception("Error in terminal write task")
 
     @threaded
     def _do_write(self, chunk: bytes) -> None:
         os.write(self.fd, chunk)
 
-    @threaded
-    def _do_close(self, fd: int) -> None:
-        os.close(fd)
+    def _on_read(self) -> None:
+        try:
+            data = os.read(self.fd, 1024 * 20)
+            if not data:
+                return
+            self._read_queue.put_nowait(data.decode(errors="ignore"))
+        except OSError:
+            return
 
-    def on_read(self) -> None:
-        max_read_bytes = 1024 * 20
-        output = os.read(self.fd, max_read_bytes).decode(errors="ignore")
-        self.read_queue.put_nowait(output)
-
-    @threaded
-    def resize(
-        self,
-        rows: int,
-        cols: int,
-        xpix: int = 0,
-        ypix: int = 0,
-    ) -> None:
-        winsize = struct.pack("HHHH", rows, cols, xpix, ypix)
+    def resize(self, rows: int, cols: int) -> None:
+        winsize = struct.pack("HHHH", rows, cols, 0, 0)
         fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
 
     async def _monitor(self) -> None:
         return_code = await self.process.wait()
-        log.info("Process was finished with return code %s", return_code)
+        log.info("Process finished with return code %s", return_code)
         await self._close()
 
     async def _close(self) -> None:
-        loop = asyncio.get_event_loop()
-        loop.remove_reader(self.fd)
+        asyncio.get_running_loop().remove_reader(self.fd)
         self._read_task.cancel()
         self._write_task.cancel()
-        await self._do_close(self.fd)
-        await self._do_close(self.slave_fd)
-        message = f"""Shell was closed
-with return code {self.process.returncode}"""
+        os.close(self.fd)
+        message = (
+            f"Shell was closed\n"
+            f"with return code {self.process.returncode}"
+        )
         await self.proxy.notify(
             type="error",
             title="Terminal is closed",
@@ -111,13 +115,14 @@ with return code {self.process.returncode}"""
         )
 
     async def close(self) -> None:
-        if (return_code := self.process.returncode) is not None:
+        if self.process.returncode is not None:
             log.info(
-                "Process was already closed with return code %s",
-                return_code,
+                "Process already closed with return code %s",
+                self.process.returncode,
             )
             return
         self.process.kill()
+        await self.process.wait()
 
 
 class PtyHandler(Route):
@@ -148,12 +153,11 @@ class PtyHandler(Route):
                 env=os.environ.copy(),
                 close_fds=True,
             )
+            os.close(pty_config.slave_fd)
+
             self._terminal = Terminal(
                 process,
                 pty_config.master_fd,
-                pty_config.slave_fd,
-                asyncio.Queue(),
-                asyncio.Queue(),
                 socket.proxy.pty,
             )
             return self._terminal
@@ -170,7 +174,7 @@ class PtyHandler(Route):
     @decorators.proxy
     async def resize(self, rows: int, cols: int) -> None:
         terminal = await self.terminal
-        await terminal.resize(rows=rows, cols=cols)
+        terminal.resize(rows=rows, cols=cols)
 
     def _onclose(self) -> t.Any:  # type: ignore
         log.info("Closing terminal")

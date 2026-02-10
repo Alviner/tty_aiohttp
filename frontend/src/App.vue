@@ -41,9 +41,8 @@ export default {
         this.term.onData(async (data) => {
             await this.$wsrpc.proxy.pty.input({ data });
         });
-        this.term.onResize(async ({ cols, rows }) => {
-            console.log("resize term", cols, rows);
-            await this.$wsrpc.proxy.pty.resize({ rows, cols });
+        this.term.onResize(({ cols, rows }) => {
+            this.$wsrpc.proxy.pty.resize({ rows, cols });
         });
 
         this.$wsrpc.addEventListener("onconnect", this.ready);
@@ -68,7 +67,7 @@ export default {
     methods: {
         fitToscreen() {
             clearTimeout(this._resizeTimer);
-            this._resizeTimer = setTimeout(() => this.fit.fit(), 50);
+            this._resizeTimer = setTimeout(() => this.fit.fit(), 100);
         },
         output({ data }) {
             this.term.write(data);
@@ -97,5 +96,6 @@ export default {
 .terminal {
     width: 100%;
     height: 100%;
+    background-color: #000;
 }
 </style>
