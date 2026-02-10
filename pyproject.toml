@@ -1,41 +1,38 @@
-[tool.poetry]
+[project]
 name = "tty_aiohttp"
 version = "0.1.0"
 description = "TTY web application"
-authors = ["Ivan Sitkin <falvinera@yandex.ru>"]
+authors = [
+  {name = "Ivan Sitkin", email = "alvinera@yandex.ru"},
+]
 readme = "README.md"
-packages = [
-  {include = "tty_aiohttp"}
+requires-python = ">=3.12"
+dependencies = [
+  "aiomisc[aiohttp,raven]>=17.7,<18",
+  "aiomisc-dependency~=0.1.17",
+  "ConfArgParse>=1.1.20,<2",
+  "fast-json>=0.3.2,<0.4",
+  "forklib~=0.5.0",
+  "setproctitle>=1.3,<2",
+  "pytz>=2025",
+  "pydantic>=2.10.6,<3",
+  "wsrpc-aiohttp>=4.0.3,<5",
+  "aiofile>=3.9.0,<4",
+  "configargparse>=1.7,<2",
 ]
-include = [
-  "tty_aiohttp/version.py",
-  "tty_aiohttp/app/static",
+
+[dependency-groups]
+dev = [
+  "aiomisc-pytest>=1.1.1,<2",
+  "pytest>=8.2,<9",
+  "pytest-cov>=5.0.0,<6",
+  "coveralls>=3.3.1,<4",
+  "mypy~=1.15.0",
+  "gray>=0.15.0,<0.16",
+  "ruff>=0.9.9,<0.10",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.12.0"
-aiomisc = {extras = ["aiohttp", "raven"], version = "^17.7"}
-aiomisc-dependency = "~0.1.17"
-ConfArgParse = "^1.1.20"
-fast-json = "^0.3.2"
-forklib = "~0.5.0"
-setproctitle = "^1.3"
-pytz = "^2025"
-pydantic = "^2.10.6"
-wsrpc-aiohttp = "^4.0.3"
-aiofile = "^3.9.0"
-configargparse = "^1.7"
-
-[tool.poetry.group.test.dependencies]
-aiomisc-pytest = "^1.1.1"
-pytest = "^8.2"
-pytest-cov = "^5.0.0"
-coveralls = "^3.3.1"
-mypy = "~1.15.0"
-gray = "^0.15.0"
-ruff = "^0.9.9"
-
-[tool.poetry.scripts]
+[project.scripts]
 tty_aiohttp = "tty_aiohttp.app.__main__:main"
 
 [tool.mypy]
@@ -63,8 +60,8 @@ branch = true
 source = ["tty_aiohttp"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 80
