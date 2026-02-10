@@ -83,14 +83,32 @@ Config file locations (auto-loaded):
 
 ## Docker
 
+### Build
+
 ```bash
-# Build image
+# Build image locally
 make build
 
 # Push to registry
 make upload
 ```
 
-The Docker image is based on `snakepacker/python:3.13` and includes zsh, git, vim, neovim, curl, htop, and oh-my-zsh.
+### Run
 
-Environment variable `APP_API_ADDRESS` is set to `0.0.0.0` in the container.
+```bash
+docker run -d -p 9090:9090 ghcr.io/alviner/ttyaiohttp:latest
+```
+
+Open http://localhost:9090 in a browser.
+
+Custom port and shell:
+
+```bash
+docker run -d \
+  -p 8080:8080 \
+  -e APP_API_PORT=8080 \
+  -e APP_SHELL=/bin/bash \
+  ghcr.io/alviner/ttyaiohttp:latest
+```
+
+The Docker image is based on `snakepacker/python:3.13` and includes zsh, git, vim, neovim, curl, htop, and oh-my-zsh.
