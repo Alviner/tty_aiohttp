@@ -21,6 +21,8 @@ export default {
             cursorBlink: true,
             macOptionIsMeta: true,
             scrollback: true,
+            fontFamily: "'Hack Nerd Font Mono', monospace",
+            fontSize: 14,
         });
         term.loadAddon(fit);
         term.loadAddon(webgl);
