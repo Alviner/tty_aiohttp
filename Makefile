@@ -1,7 +1,7 @@
 
 PROJECT_PATH := tty_aiohttp
 
-VERSION = $(shell poetry version -s)
+VERSION = $(shell uv version --short)
 
 CI_REGISTRY ?= ghcr.io
 CI_PROJECT_NAMESPACE ?= alviner
@@ -13,7 +13,7 @@ all:
 	@echo "make build          - Build a docker image"
 	@echo "make lint           - Syntax check python with ruff and mypy"
 	@echo "make pytest         - Test this project"
-	@echo "make format         - Format project with gray"
+	@echo "make format         - Format project with ruff"
 	@echo "make upload         - Upload this project to the docker-registry"
 	@echo "make clean          - Remove files which creates by distutils"
 	@echo "make purge          - Complete cleanup the project"
@@ -23,7 +23,7 @@ static:
 	yarn build
 
 wheel:
-	poetry build -f wheel
+	uv build --wheel
 
 build: clean wheel
 	docker build -t $(CI_REGISTRY_IMAGE):$(DOCKER_TAG) --target release .
@@ -35,31 +35,26 @@ clean-pyc:
 	find . -iname '*.pyc' -delete
 
 lint:
-	poetry run mypy $(PROJECT_PATH)
-	poetry run ruff check $(PROJECT_PATH) tests
-
+	uv run mypy $(PROJECT_PATH)
+	uv run ruff check $(PROJECT_PATH) tests
 
 format:
-	poetry run gray $(PROJECT_PATH) tests
-	poetry run ruff format $(PROJECT_PATH) tests
+	uv run ruff format $(PROJECT_PATH) tests
 
 purge: clean
 	rm -rf ./.venv
 
 pytest:
-	poetry run pytest
-
-local:
-	docker-compose -f docker-compose.dev.yml up --force-recreate --renew-anon-volumes --build
+	uv run pytest
 
 pytest-ci:
-	poetry run pytest -v --cov $(PROJECT_PATH) --cov-report term-missing --disable-warnings --junitxml=report.xml
-	poetry run coverage xml
+	uv run pytest -v --cov $(PROJECT_PATH) --cov-report term-missing --disable-warnings --junitxml=report.xml
+	uv run coverage xml
 
 upload: build
 	docker push $(CI_REGISTRY_IMAGE):$(DOCKER_TAG)
 
 develop: clean
-	poetry -V
-	poetry install
+	uv --version
+	uv sync
 	yarn install
