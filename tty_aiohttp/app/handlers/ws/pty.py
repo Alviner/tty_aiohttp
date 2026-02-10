@@ -114,7 +114,7 @@ class Terminal:
                 title="Terminal is closed",
                 message=message,
             )
-        except Exception:
+        except ConnectionError:
             log.debug("Could not send close notification, connection lost")
 
     async def close(self) -> None:
