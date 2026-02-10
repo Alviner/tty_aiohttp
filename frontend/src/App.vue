@@ -67,7 +67,9 @@ export default {
     methods: {
         fitToscreen() {
             clearTimeout(this._resizeTimer);
-            this._resizeTimer = setTimeout(() => this.fit.fit(), 100);
+            this._resizeTimer = setTimeout(() => {
+                requestAnimationFrame(() => this.fit.fit());
+            }, 100);
         },
         output({ data }) {
             this.term.write(data);
