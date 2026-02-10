@@ -6,26 +6,27 @@ import "@xterm/xterm/css/xterm.css";
 
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
-import { WebglAddon } from "@xterm/addon-webgl";
+import { CanvasAddon } from "@xterm/addon-canvas";
 import { ClipboardAddon } from "@xterm/addon-clipboard";
 import { WebLinksAddon } from "@xterm/addon-web-links";
+import { LigaturesAddon } from "@xterm/addon-ligatures";
 
 export default {
     data() {
         const fit = new FitAddon();
-        const webgl = new WebglAddon();
+        const canvas = new CanvasAddon();
         const clipboard = new ClipboardAddon();
         const links = new WebLinksAddon();
-
         const term = new Terminal({
             cursorBlink: true,
             macOptionIsMeta: true,
             scrollback: true,
-            fontFamily: "'Hack Nerd Font Mono', monospace",
+            fontFamily: "'LigaHack Nerd Font', monospace",
             fontSize: 14,
+            allowProposedApi: true,
         });
         term.loadAddon(fit);
-        term.loadAddon(webgl);
+        term.loadAddon(canvas);
         term.loadAddon(clipboard);
         term.loadAddon(links);
 
@@ -37,6 +38,7 @@ export default {
     computed: {},
     async mounted() {
         this.term.open(this.$refs.terminal);
+        this.term.loadAddon(new LigaturesAddon());
 
         this.term.onData(async (data) => {
             await this.$wsrpc.proxy.pty.input({ data });

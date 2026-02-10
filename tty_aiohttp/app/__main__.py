@@ -75,6 +75,7 @@ def main() -> None:
 
     config_serializers()
     config_filters()
+    logging.getLogger("wsrpc_aiohttp.websocket.common").setLevel(logging.ERROR)
 
     forklib.fork(
         args.forks,
