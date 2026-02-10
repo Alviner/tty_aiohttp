@@ -3,7 +3,6 @@ name: release
 on:
   push:
     branches: [main]
-    tags: ["v*"]
 
 env:
   REGISTRY: ghcr.io
@@ -11,6 +10,8 @@ env:
 jobs:
   build-wheel:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup python3.14
@@ -20,6 +21,9 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
       - run: uv sync
+      - name: Extract version
+        id: version
+        run: echo "version=$(uv version --short)" >> "$GITHUB_OUTPUT"
       - run: make wheel
       - uses: actions/upload-artifact@v4
         with:
@@ -70,6 +74,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.build-wheel.outputs.version }}
+            type=raw,value=latest
 
       - name: Build and push by digest
         id: build
@@ -95,7 +102,7 @@ jobs:
           retention-days: 1
 
   merge:
-    needs: build-image
+    needs: [build-wheel, build-image]
     runs-on: ubuntu-latest
 
     permissions:
@@ -130,6 +137,9 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.build-wheel.outputs.version }}
+            type=raw,value=latest
 
       - name: Create manifest list and push
         working-directory: ${{ runner.temp }}/digests

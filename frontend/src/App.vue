@@ -49,12 +49,15 @@ export default {
         this.$wsrpc.addEventListener("onconnect", this.ready);
         this.$wsrpc.addRoute("pty.notify", this.notify);
         this.$wsrpc.addRoute("pty.output", this.output);
-        window.addEventListener("resize", this.fitToscreen);
+
+        this._resizeObserver = new ResizeObserver(() => this.fitToscreen());
+        this._resizeObserver.observe(this.$refs.terminal);
+
         await this.ready();
         this.term.focus();
     },
     beforeUnmount() {
-        window.removeEventListener("resize", this.fitToscreen);
+        this._resizeObserver?.disconnect();
         this.$wsrpc.removeRoute("pty.output", this.output);
         this.$wsrpc.removeRoute("pty.notify", this.notify);
         this.$wsrpc.removeEventListener("onconnect", this.ready);
@@ -63,9 +66,9 @@ export default {
         this.$wsrpc.connect();
     },
     methods: {
-        async fitToscreen() {
-            console.log("fitting screen");
-            this.fit.fit();
+        fitToscreen() {
+            clearTimeout(this._resizeTimer);
+            this._resizeTimer = setTimeout(() => this.fit.fit(), 50);
         },
         output({ data }) {
             this.term.write(data);
