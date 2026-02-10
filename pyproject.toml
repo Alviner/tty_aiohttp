@@ -1,6 +1,6 @@
 [project]
 name = "tty_aiohttp"
-version = "0.2.0"
+version = "0.3.0"
 description = "TTY web application"
 authors = [
   {name = "Ivan Sitkin", email = "alvinera@yandex.ru"},

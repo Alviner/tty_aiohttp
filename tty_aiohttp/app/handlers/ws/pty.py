@@ -108,11 +108,14 @@ class Terminal:
             f"Shell was closed\n"
             f"with return code {self.process.returncode}"
         )
-        await self.proxy.notify(
-            type="error",
-            title="Terminal is closed",
-            message=message,
-        )
+        try:
+            await self.proxy.notify(
+                type="error",
+                title="Terminal is closed",
+                message=message,
+            )
+        except ConnectionError:
+            log.debug("Could not send close notification, connection lost")
 
     async def close(self) -> None:
         if self.process.returncode is not None:

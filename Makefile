@@ -5,7 +5,7 @@ VERSION = $(shell uv version --short)
 
 CI_REGISTRY ?= ghcr.io
 CI_PROJECT_NAMESPACE ?= alviner
-CI_PROJECT_NAME ?= $(shell echo $(PROJECT_PATH) | tr -cd "[:alnum:]")
+CI_PROJECT_NAME ?= $(shell echo $(PROJECT_PATH) | tr -cd "[:alnum:]_-")
 CI_REGISTRY_IMAGE ?= $(CI_REGISTRY)/$(CI_PROJECT_NAMESPACE)/$(CI_PROJECT_NAME)
 DOCKER_TAG = $(shell echo $(VERSION) | tr '+' '-')
 
