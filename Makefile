@@ -13,7 +13,7 @@ all:
 	@echo "make build          - Build a docker image"
 	@echo "make lint           - Syntax check python with ruff and mypy"
 	@echo "make pytest         - Test this project"
-	@echo "make format         - Format project with gray"
+	@echo "make format         - Format project with ruff"
 	@echo "make upload         - Upload this project to the docker-registry"
 	@echo "make clean          - Remove files which creates by distutils"
 	@echo "make purge          - Complete cleanup the project"
@@ -39,7 +39,6 @@ lint:
 	uv run ruff check $(PROJECT_PATH) tests
 
 format:
-	uv run gray $(PROJECT_PATH) tests
 	uv run ruff format $(PROJECT_PATH) tests
 
 purge: clean
