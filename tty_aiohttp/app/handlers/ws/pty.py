@@ -2,6 +2,7 @@ import asyncio
 import fcntl
 import os
 import pty
+import signal
 import struct
 import termios
 import typing as t
@@ -39,10 +40,12 @@ class Terminal:
     ws: web.WebSocketResponse
 
     _read_queue: asyncio.Queue[bytes] = field(
-        init=False, default_factory=asyncio.Queue,
+        init=False,
+        default_factory=asyncio.Queue,
     )
     _write_queue: asyncio.Queue[bytes] = field(
-        init=False, default_factory=asyncio.Queue,
+        init=False,
+        default_factory=asyncio.Queue,
     )
     _read_task: asyncio.Task[None] = field(init=False)
     _write_task: asyncio.Task[None] = field(init=False)
@@ -100,9 +103,7 @@ class Terminal:
         log.info("Process finished with return code %s", return_code)
         self._cleanup_io()
         message = (
-            "\r\n\x1b[31m"
-            f"Process closed with code {return_code}"
-            "\x1b[0m\r\n"
+            f"\r\n\x1b[31mProcess closed with code {return_code}\x1b[0m\r\n"
         )
         try:
             await self.ws.send_bytes(message.encode())
@@ -133,7 +134,8 @@ class Terminal:
             self.process.kill()
             try:
                 await asyncio.wait_for(
-                    self.process.wait(), timeout=5.0,
+                    self.process.wait(),
+                    timeout=5.0,
                 )
             except TimeoutError:
                 log.warning(
@@ -165,9 +167,13 @@ class PtyHandler(Route):
             env["TERM"] = "xterm-256color"
             env["COLORTERM"] = "truecolor"
 
+            def _setup_child() -> None:
+                os.setsid()
+                fcntl.ioctl(0, termios.TIOCSCTTY, 0)
+
             process = await asyncio.create_subprocess_exec(
                 self.shell,
-                preexec_fn=os.setsid,
+                preexec_fn=_setup_child,
                 stdin=pty_config.slave_fd,
                 stdout=pty_config.slave_fd,
                 stderr=pty_config.slave_fd,
@@ -187,10 +193,6 @@ class PtyHandler(Route):
 
     @decorators.proxy
     async def ready(self, cols: int, rows: int) -> None:
-        await self.resize(cols=cols, rows=rows)
-
-    @decorators.proxy
-    async def resize(self, rows: int, cols: int) -> None:
         terminal = await self.terminal
         terminal.resize(rows=rows, cols=cols)
 
@@ -204,7 +206,8 @@ class PtyHandler(Route):
 
 
 async def _close_and_untrack(
-    terminal: Terminal, app: web.Application,
+    terminal: Terminal,
+    app: web.Application,
 ) -> None:
     try:
         await terminal.close()
