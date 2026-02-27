@@ -5,12 +5,12 @@ from typing import Any
 from aiohttp import web
 from aiohttp.web_app import Application, Middleware
 from aiomisc.service.aiohttp import AIOHTTPService
-from wsrpc_aiohttp import WebSocketAsync
 
 from tty_aiohttp.app import ASSETS_ROOT, FONTS_ROOT
 from tty_aiohttp.app.handlers.index import IconHandler, IndexHandler
 from tty_aiohttp.app.handlers.static import StaticResource
 from tty_aiohttp.app.handlers.v1.ping import PingHandler
+from tty_aiohttp.app.handlers.ws import PtyWebSocket
 from tty_aiohttp.app.handlers.ws.pty import SHELL_KEY, PtyHandler
 from tty_aiohttp.app.utils.serializers import config_serializers
 from tty_aiohttp.utils.argparse import Environment
@@ -56,9 +56,9 @@ class REST(AIOHTTPService):
                 path=path,
                 handler=handler,
             )
-        app.router.add_route("*", "/ws/", WebSocketAsync)
+        app.router.add_route("*", "/ws/", PtyWebSocket)
         for route, handler in self.WS_ROUTES:
-            WebSocketAsync.add_route(
+            PtyWebSocket.add_route(
                 route=route,
                 handler=handler,
             )

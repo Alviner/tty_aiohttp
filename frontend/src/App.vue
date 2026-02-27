@@ -1,5 +1,5 @@
 <script>
-import wsrpc from "./ws.js";
+import wsrpc, { setBinaryHandler } from "./ws.js";
 import { ElNotification as Notification } from "element-plus";
 import 'element-plus/es/components/notification/style/css'
 import "@xterm/xterm/css/xterm.css";
@@ -40,8 +40,12 @@ export default {
         this.term.open(this.$refs.terminal);
         this.term.loadAddon(new LigaturesAddon());
 
-        this.term.onData(async (data) => {
-            await this.$wsrpc.proxy.pty.input({ data });
+        const encoder = new TextEncoder();
+        this.term.onData((data) => {
+            this.$wsrpc.sendRaw(encoder.encode(data));
+        });
+        this.term.onBinary((data) => {
+            this.$wsrpc.sendRaw(Uint8Array.from(data, (c) => c.charCodeAt(0)));
         });
         this.term.onResize(({ cols, rows }) => {
             this.$wsrpc.proxy.pty.resize({ rows, cols });
@@ -49,7 +53,7 @@ export default {
 
         this.$wsrpc.addEventListener("onconnect", this.ready);
         this.$wsrpc.addRoute("pty.notify", this.notify);
-        this.$wsrpc.addRoute("pty.output", this.output);
+        setBinaryHandler((buf) => this.term.write(new Uint8Array(buf)));
 
         this._resizeObserver = new ResizeObserver(() => this.fitToscreen());
         this._resizeObserver.observe(this.$refs.terminal);
@@ -59,7 +63,7 @@ export default {
     },
     beforeUnmount() {
         this._resizeObserver?.disconnect();
-        this.$wsrpc.removeRoute("pty.output", this.output);
+        setBinaryHandler(null);
         this.$wsrpc.removeRoute("pty.notify", this.notify);
         this.$wsrpc.removeEventListener("onconnect", this.ready);
     },
@@ -72,9 +76,6 @@ export default {
             this._resizeTimer = setTimeout(() => {
                 requestAnimationFrame(() => this.fit.fit());
             }, 100);
-        },
-        output({ data }) {
-            this.term.write(data);
         },
         async ready() {
             this.fit.fit();

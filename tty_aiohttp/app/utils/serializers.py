@@ -13,4 +13,4 @@ def config_serializers() -> None:
 
     @serializer.register(BaseModel)
     def _serialize_pydantic(value: BaseModel) -> t.Mapping[str, t.Any]:
-        return value.dict(exclude_unset=True, by_alias=True)
+        return value.model_dump(exclude_unset=True, by_alias=True)

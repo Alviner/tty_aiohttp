@@ -1,4 +1,3 @@
-
 PROJECT_PATH := tty_aiohttp
 
 VERSION = $(shell uv version --short)
@@ -22,13 +21,13 @@ all:
 static:
 	yarn build
 
-wheel:
+wheel: static
 	uv build --wheel
 
 build: clean wheel
 	docker build -t $(CI_REGISTRY_IMAGE):$(DOCKER_TAG) --target release .
 
-clean:
+clean: clean-pyc
 	rm -fr dist
 
 clean-pyc:
@@ -55,6 +54,5 @@ upload: build
 	docker push $(CI_REGISTRY_IMAGE):$(DOCKER_TAG)
 
 develop: clean
-	uv --version
 	uv sync
 	yarn install

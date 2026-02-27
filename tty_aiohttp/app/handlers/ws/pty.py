@@ -37,11 +37,12 @@ class Terminal:
     process: Process
     fd: int
     proxy: ProxyMethod
+    ws: web.WebSocketResponse
 
-    _read_queue: asyncio.Queue[str] = field(
+    _read_queue: asyncio.Queue[bytes] = field(
         init=False, default_factory=asyncio.Queue,
     )
-    _write_queue: asyncio.Queue[str] = field(
+    _write_queue: asyncio.Queue[bytes] = field(
         init=False, default_factory=asyncio.Queue,
     )
     _read_task: asyncio.Task[None] = field(init=False)
@@ -58,20 +59,20 @@ class Terminal:
         try:
             while True:
                 chunk = await self._read_queue.get()
-                await self.proxy.output(data=chunk)
+                await self.ws.send_bytes(chunk)
         except asyncio.CancelledError:
             raise
         except Exception:
             log.exception("Error in terminal read task")
 
-    async def write(self, chunk: str) -> None:
+    async def write(self, chunk: bytes) -> None:
         await self._write_queue.put(chunk)
 
     async def _write(self) -> None:
         try:
             while True:
                 chunk = await self._write_queue.get()
-                await self._do_write(chunk.encode("utf-8"))
+                await self._do_write(chunk)
         except asyncio.CancelledError:
             raise
         except Exception:
@@ -86,7 +87,7 @@ class Terminal:
             data = os.read(self.fd, 1024 * 20)
             if not data:
                 return
-            self._read_queue.put_nowait(data.decode(errors="ignore"))
+            self._read_queue.put_nowait(data)
         except OSError:
             return
 
@@ -162,17 +163,13 @@ class PtyHandler(Route):
                 process,
                 pty_config.master_fd,
                 socket.proxy.pty,
+                socket.socket,  # type: ignore[attr-defined]
             )
             return self._terminal
 
     @decorators.proxy
     async def ready(self, cols: int, rows: int) -> None:
         await self.resize(cols=cols, rows=rows)
-
-    @decorators.proxy
-    async def input(self, data: str) -> None:
-        terminal = await self.terminal
-        await terminal.write(data)
 
     @decorators.proxy
     async def resize(self, rows: int, cols: int) -> None:
