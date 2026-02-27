@@ -202,8 +202,16 @@ class PtyHandler(Route):
         if terminal is None:
             return
         app = self.socket.request.app
+        return _close_and_untrack(terminal, app)
+
+
+async def _close_and_untrack(
+    terminal: Terminal, app: web.Application,
+) -> None:
+    try:
+        await terminal.close()
+    finally:
         app[TERMINALS_KEY].discard(terminal)
-        return terminal.close()
 
 
 async def close_all_terminals(app: web.Application) -> None:
