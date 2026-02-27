@@ -38,15 +38,31 @@ export default {
         this.term.open(this.$refs.terminal);
         this.term.loadAddon(new LigaturesAddon());
 
+        const CMD_INPUT = 0x00;
+        const CMD_RESIZE = 0x01;
         const encoder = new TextEncoder();
+
         this.term.onData((data) => {
-            this.$wsrpc.sendRaw(encoder.encode(data));
+            const encoded = encoder.encode(data);
+            const msg = new Uint8Array(1 + encoded.length);
+            msg[0] = CMD_INPUT;
+            msg.set(encoded, 1);
+            this.$wsrpc.sendRaw(msg);
         });
         this.term.onBinary((data) => {
-            this.$wsrpc.sendRaw(Uint8Array.from(data, (c) => c.charCodeAt(0)));
+            const raw = Uint8Array.from(data, (c) => c.charCodeAt(0));
+            const msg = new Uint8Array(1 + raw.length);
+            msg[0] = CMD_INPUT;
+            msg.set(raw, 1);
+            this.$wsrpc.sendRaw(msg);
         });
         this.term.onResize(({ cols, rows }) => {
-            this.$wsrpc.proxy.pty.resize({ rows, cols });
+            const msg = new Uint8Array(5);
+            const view = new DataView(msg.buffer);
+            msg[0] = CMD_RESIZE;
+            view.setUint16(1, rows);
+            view.setUint16(3, cols);
+            this.$wsrpc.sendRaw(msg);
         });
 
         this.$wsrpc.addEventListener("onconnect", this.ready);
@@ -68,10 +84,12 @@ export default {
     },
     methods: {
         fitToscreen() {
-            clearTimeout(this._resizeTimer);
-            this._resizeTimer = setTimeout(() => {
-                requestAnimationFrame(() => this.fit.fit());
-            }, 100);
+            if (!this._resizeRaf) {
+                this._resizeRaf = requestAnimationFrame(() => {
+                    this._resizeRaf = null;
+                    this.fit.fit();
+                });
+            }
         },
         async ready() {
             this.fit.fit();
