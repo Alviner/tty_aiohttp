@@ -57,6 +57,8 @@ def _run_worker(
 
 def main() -> None:
     args = parser.parse_args()
+    import asyncio
+    asyncio.set_event_loop(asyncio.new_event_loop())
     basic_config(
         level=args.log_level,
         log_format=args.log_format,
