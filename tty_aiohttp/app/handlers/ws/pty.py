@@ -12,7 +12,6 @@ from logging import getLogger
 from aiohttp import web
 from aiomisc.thread_pool import threaded
 from wsrpc_aiohttp import Route, WSRPCBase, decorators
-from wsrpc_aiohttp.websocket.abc import ProxyMethod
 
 log = getLogger(__name__)
 
@@ -37,7 +36,6 @@ class PTYConfig:
 class Terminal:
     process: Process
     fd: int
-    proxy: ProxyMethod
     ws: web.WebSocketResponse
 
     _read_queue: asyncio.Queue[bytes] = field(
@@ -102,15 +100,12 @@ class Terminal:
         log.info("Process finished with return code %s", return_code)
         self._cleanup_io()
         message = (
-            f"Shell was closed\n"
-            f"with return code {self.process.returncode}"
+            "\r\n\x1b[31m"
+            f"Process closed with code {return_code}"
+            "\x1b[0m\r\n"
         )
         try:
-            await self.proxy.notify(
-                type="error",
-                title="Terminal is closed",
-                message=message,
-            )
+            await self.ws.send_bytes(message.encode())
         except (ConnectionError, asyncio.CancelledError):
             log.debug(
                 "Could not send close notification, connection lost",
@@ -166,13 +161,17 @@ class PtyHandler(Route):
             pty_config = await PTYConfig.open_pty(self.shell)
             socket: WSRPCBase = self.socket  # type: ignore
 
+            env = os.environ.copy()
+            env["TERM"] = "xterm-256color"
+            env["COLORTERM"] = "truecolor"
+
             process = await asyncio.create_subprocess_exec(
                 self.shell,
                 preexec_fn=os.setsid,
                 stdin=pty_config.slave_fd,
                 stdout=pty_config.slave_fd,
                 stderr=pty_config.slave_fd,
-                env=os.environ.copy(),
+                env=env,
                 close_fds=True,
             )
             os.close(pty_config.slave_fd)
@@ -180,7 +179,6 @@ class PtyHandler(Route):
             self._terminal = Terminal(
                 process,
                 pty_config.master_fd,
-                socket.proxy.pty,
                 socket.socket,  # type: ignore[attr-defined]
             )
             app = self.socket.request.app
