@@ -2,7 +2,6 @@ import asyncio
 import fcntl
 import os
 import pty
-import signal
 import struct
 import termios
 import typing as t
