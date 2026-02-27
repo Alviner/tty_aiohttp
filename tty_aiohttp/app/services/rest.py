@@ -11,7 +11,12 @@ from tty_aiohttp.app.handlers.index import IconHandler, IndexHandler
 from tty_aiohttp.app.handlers.static import StaticResource
 from tty_aiohttp.app.handlers.v1.ping import PingHandler
 from tty_aiohttp.app.handlers.ws import PtyWebSocket
-from tty_aiohttp.app.handlers.ws.pty import SHELL_KEY, PtyHandler
+from tty_aiohttp.app.handlers.ws.pty import (
+    SHELL_KEY,
+    TERMINALS_KEY,
+    PtyHandler,
+    close_all_terminals,
+)
 from tty_aiohttp.app.utils.serializers import config_serializers
 from tty_aiohttp.utils.argparse import Environment
 
@@ -43,6 +48,9 @@ class REST(AIOHTTPService):
     async def create_application(self) -> Application:
         config_serializers()
         app = web.Application()
+
+        app[TERMINALS_KEY] = set()
+        app.on_shutdown.append(close_all_terminals)
 
         self._add_routes(app)
         self._add_middlewares(app)

@@ -17,6 +17,7 @@ from wsrpc_aiohttp.websocket.abc import ProxyMethod
 log = getLogger(__name__)
 
 SHELL_KEY: web.AppKey[str] = web.AppKey("shell")
+TERMINALS_KEY: web.AppKey[set["Terminal"]] = web.AppKey("terminals")
 
 
 @dataclass
@@ -32,7 +33,7 @@ class PTYConfig:
         return cls(master_fd, slave_fd, shell)
 
 
-@dataclass
+@dataclass(eq=False)
 class Terminal:
     process: Process
     fd: int
@@ -48,6 +49,7 @@ class Terminal:
     _read_task: asyncio.Task[None] = field(init=False)
     _write_task: asyncio.Task[None] = field(init=False)
     _monitor_task: asyncio.Task[None] = field(init=False)
+    _closed: bool = field(init=False, default=False)
 
     def __post_init__(self) -> None:
         self._write_task = asyncio.create_task(self._write())
@@ -98,13 +100,7 @@ class Terminal:
     async def _monitor(self) -> None:
         return_code = await self.process.wait()
         log.info("Process finished with return code %s", return_code)
-        await self._close()
-
-    async def _close(self) -> None:
-        asyncio.get_running_loop().remove_reader(self.fd)
-        self._read_task.cancel()
-        self._write_task.cancel()
-        os.close(self.fd)
+        self._cleanup_io()
         message = (
             f"Shell was closed\n"
             f"with return code {self.process.returncode}"
@@ -115,18 +111,40 @@ class Terminal:
                 title="Terminal is closed",
                 message=message,
             )
-        except ConnectionError:
-            log.debug("Could not send close notification, connection lost")
+        except (ConnectionError, asyncio.CancelledError):
+            log.debug(
+                "Could not send close notification, connection lost",
+            )
+
+    def _cleanup_io(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        try:
+            asyncio.get_running_loop().remove_reader(self.fd)
+        except (ValueError, OSError):
+            pass
+        self._read_task.cancel()
+        self._write_task.cancel()
+        try:
+            os.close(self.fd)
+        except OSError:
+            pass
 
     async def close(self) -> None:
-        if self.process.returncode is not None:
-            log.info(
-                "Process already closed with return code %s",
-                self.process.returncode,
-            )
-            return
-        self.process.kill()
-        await self.process.wait()
+        self._monitor_task.cancel()
+        self._cleanup_io()
+        if self.process.returncode is None:
+            self.process.kill()
+            try:
+                await asyncio.wait_for(
+                    self.process.wait(), timeout=5.0,
+                )
+            except TimeoutError:
+                log.warning(
+                    "Process %s did not exit after kill",
+                    self.process.pid,
+                )
 
 
 class PtyHandler(Route):
@@ -165,6 +183,8 @@ class PtyHandler(Route):
                 socket.proxy.pty,
                 socket.socket,  # type: ignore[attr-defined]
             )
+            app = self.socket.request.app
+            app[TERMINALS_KEY].add(self._terminal)
             return self._terminal
 
     @decorators.proxy
@@ -181,4 +201,17 @@ class PtyHandler(Route):
         terminal, self._terminal = self._terminal, None
         if terminal is None:
             return
+        app = self.socket.request.app
+        app[TERMINALS_KEY].discard(terminal)
         return terminal.close()
+
+
+async def close_all_terminals(app: web.Application) -> None:
+    terminals: set[Terminal] = app[TERMINALS_KEY]
+    to_close = list(terminals)
+    terminals.clear()
+    for terminal in to_close:
+        try:
+            await terminal.close()
+        except Exception:
+            log.exception("Error closing terminal on shutdown")
