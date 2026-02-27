@@ -40,8 +40,9 @@ class Terminal:
 
     _read_queue: asyncio.Queue[bytes] = field(
         init=False,
-        default_factory=asyncio.Queue,
+        default_factory=lambda: asyncio.Queue(maxsize=128),
     )
+    _reader_paused: bool = field(init=False, default=False)
     _write_queue: asyncio.Queue[bytes] = field(
         init=False,
         default_factory=asyncio.Queue,
@@ -62,8 +63,12 @@ class Terminal:
             while True:
                 chunk = await self._read_queue.get()
                 await self.ws.send_bytes(chunk)
+                if self._reader_paused and not self._read_queue.full():
+                    self._resume_reader()
         except asyncio.CancelledError:
-            raise
+            return
+        except ConnectionError:
+            log.debug("Connection lost in terminal read task")
         except Exception:
             log.exception("Error in terminal read task")
 
@@ -76,7 +81,9 @@ class Terminal:
                 chunk = await self._write_queue.get()
                 await self._do_write(chunk)
         except asyncio.CancelledError:
-            raise
+            return
+        except ConnectionError:
+            log.debug("Connection lost in terminal write task")
         except Exception:
             log.exception("Error in terminal write task")
 
@@ -89,9 +96,35 @@ class Terminal:
             data = os.read(self.fd, 1024 * 20)
             if not data:
                 return
-            self._read_queue.put_nowait(data)
+            try:
+                self._read_queue.put_nowait(data)
+            except asyncio.QueueFull:
+                self._pause_reader()
+                return
         except OSError:
             return
+
+    def _pause_reader(self) -> None:
+        if self._reader_paused:
+            return
+        self._reader_paused = True
+        try:
+            asyncio.get_running_loop().remove_reader(self.fd)
+        except (ValueError, OSError):
+            pass
+        log.debug("PTY reader paused (queue full)")
+
+    def _resume_reader(self) -> None:
+        if not self._reader_paused or self._closed:
+            return
+        self._reader_paused = False
+        try:
+            asyncio.get_running_loop().add_reader(
+                self.fd, self._on_read,
+            )
+        except (ValueError, OSError):
+            pass
+        log.debug("PTY reader resumed")
 
     def resize(self, rows: int, cols: int) -> None:
         winsize = struct.pack("HHHH", rows, cols, 0, 0)
@@ -129,6 +162,13 @@ class Terminal:
     async def close(self) -> None:
         self._monitor_task.cancel()
         self._cleanup_io()
+        for task in (
+            self._read_task, self._write_task, self._monitor_task,
+        ):
+            try:
+                await task
+            except (asyncio.CancelledError, Exception):
+                pass
         if self.process.returncode is None:
             self.process.kill()
             try:
