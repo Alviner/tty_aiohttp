@@ -1,7 +1,5 @@
 <script>
 import wsrpc, { setBinaryHandler } from "./ws.js";
-import { ElNotification as Notification } from "element-plus";
-import 'element-plus/es/components/notification/style/css'
 import "@xterm/xterm/css/xterm.css";
 
 import { Terminal } from "@xterm/xterm";
@@ -52,7 +50,6 @@ export default {
         });
 
         this.$wsrpc.addEventListener("onconnect", this.ready);
-        this.$wsrpc.addRoute("pty.notify", this.notify);
         setBinaryHandler((buf) => this.term.write(new Uint8Array(buf)));
 
         this._resizeObserver = new ResizeObserver(() => this.fitToscreen());
@@ -64,7 +61,6 @@ export default {
     beforeUnmount() {
         this._resizeObserver?.disconnect();
         setBinaryHandler(null);
-        this.$wsrpc.removeRoute("pty.notify", this.notify);
         this.$wsrpc.removeEventListener("onconnect", this.ready);
     },
     beforeCreate() {
@@ -81,13 +77,6 @@ export default {
             this.fit.fit();
             const dims = { cols: this.term.cols, rows: this.term.rows };
             await this.$wsrpc.proxy.pty.ready(dims);
-        },
-        async notify({ title, message, type }) {
-            Notification({
-                title,
-                message,
-                type,
-            });
         },
     },
 };
